@@ -32,8 +32,9 @@ interface DrinkProps {
     category: string;
     drinkId: string;
 }
+
 function Drink(props: DrinkProps) {
-    const { name, isAlcoholic, category, drinkId } = props;
+    const { name, isAlcoholic, category } = props;
     const [saveDrinkLoading, setSaveDrinkLoading] = useState<boolean>(false);
 
     const saveDrink = () => {

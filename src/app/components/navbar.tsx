@@ -10,7 +10,7 @@ export default function Navbar() {
     return (
         <Flex padding="1rem">
             <Flex align="center" gap="0.5rem">
-                <FaGlassCheers size="40" color="yellow" />
+                <FaGlassCheers size="40" color="darkyellow" />
                 <Text fontSize="3xl" fontStyle="italic" fontWeight="medium">
                     Brewery
                 </Text>
