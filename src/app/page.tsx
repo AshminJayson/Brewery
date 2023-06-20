@@ -1,95 +1,159 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client";
+
+import {
+    Button,
+    Flex,
+    Text,
+    Table,
+    Thead,
+    Tbody,
+    Tfoot,
+    Tr,
+    Th,
+    Td,
+    TableCaption,
+    TableContainer,
+} from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { useAuth } from "./contexts/authContext";
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { firestore } from "./contexts/firebaseApp";
+
+interface Drink {
+    name: string | null;
+    isAlcoholic: string | null;
+    category: string | null;
+    drinkId: string | null;
+}
+
+interface DrinkProps {
+    name: string;
+    isAlcoholic: string;
+    category: string;
+    drinkId: string;
+}
+function Drink(props: DrinkProps) {
+    const { name, isAlcoholic, category, drinkId } = props;
+    const [saveDrinkLoading, setSaveDrinkLoading] = useState<boolean>(false);
+
+    const saveDrink = () => {
+        setSaveDrinkLoading(true);
+        const userSaved = collection(firestore, user.email);
+        addDoc(userSaved, props).finally(() => {
+            setSaveDrinkLoading(false);
+        });
+    };
+    const { user } = useAuth();
+    return (
+        <Flex
+            flexDirection="column"
+            gap=".5rem"
+            backdropBlur="md"
+            padding="1rem"
+        >
+            <Text>Drink Name: {name}</Text>
+            <Text>Drink Type: {isAlcoholic}</Text>
+            <Text>Drink Category: {category}</Text>
+            <Button
+                isLoading={saveDrinkLoading}
+                isDisabled={!user}
+                onClick={saveDrink}
+                alignSelf="center"
+                maxWidth="80%"
+            >
+                Save Drink
+            </Button>
+        </Flex>
+    );
+}
 
 export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    const [drink, setDrink] = useState<DrinkProps>();
+    const [userDrinks, setUserDrinks] = useState<DrinkProps[]>([]);
+    const [getDrinkLoading, setGetDrinkLoading] = useState<boolean>(false);
+    const { user } = useAuth();
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+    useEffect(() => {
+        (async () => {
+            if (user) {
+                setUserDrinks([]);
+                const userSaved = collection(firestore, user.email);
+                const querySnapshot = await getDocs(userSaved);
+                querySnapshot.docs.map((doc: any) => {
+                    setUserDrinks((userDrinks) => [...userDrinks, doc.data()]);
+                });
+            }
+        })();
+    }, [user]);
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
+    const getDrink = () => {
+        setGetDrinkLoading(true);
+        fetch("http://thecocktaildb.com/api/json/v1/1/random.php")
+            .then((res: any) => {
+                res.json().then((res: any) => {
+                    setDrink({
+                        name: res.drinks[0].strDrink,
+                        isAlcoholic: res.drinks[0].strAlcoholic,
+                        category: res.drinks[0].strCategory,
+                        drinkId: res.drinks[0].idDrink,
+                    });
+                });
+            })
+            .finally(() => {
+                setGetDrinkLoading(false);
+            });
+    };
+
+    return (
+        <Flex
+            padding="1rem"
+            justify="center"
+            align="center"
+            flexDirection="column"
+            gap="1rem"
         >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+            <Flex direction="column" justify="center" align="center">
+                <Button isLoading={getDrinkLoading} onClick={getDrink}>
+                    Get Random Drink
+                </Button>
+                {drink && <Drink {...drink} />}
+            </Flex>
+            {!user && (
+                <Text fontWeight="medium">
+                    <sup>*</sup>Login to save and view saved drinks
+                </Text>
+            )}
+            {user && (
+                <TableContainer borderRadius="md">
+                    <Table variant="simple">
+                        <TableCaption>Saved Drinks</TableCaption>
+                        <Thead>
+                            <Tr>
+                                <Th>Name</Th>
+                                <Th>Type</Th>
+                                <Th>Category</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {userDrinks.length > 0 &&
+                                userDrinks.map((drink, index) => {
+                                    return (
+                                        <Tr key={index}>
+                                            <Td>{drink.name}</Td>
+                                            <Td>{drink.isAlcoholic}</Td>
+                                            <Td>{drink.category}</Td>
+                                        </Tr>
+                                    );
+                                })}
+                        </Tbody>
+                        <Tfoot>
+                            {userDrinks.length == 0 && (
+                                <Text>You have no saved drinks</Text>
+                            )}
+                        </Tfoot>
+                    </Table>
+                </TableContainer>
+            )}
+        </Flex>
+    );
 }
