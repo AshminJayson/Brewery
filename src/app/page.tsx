@@ -88,7 +88,7 @@ export default function Home() {
 
     const getDrink = () => {
         setGetDrinkLoading(true);
-        fetch("http://thecocktaildb.com/api/json/v1/1/random.php")
+        fetch("https://thecocktaildb.com/api/json/v1/1/random.php")
             .then((res: any) => {
                 res.json().then((res: any) => {
                     setDrink({
