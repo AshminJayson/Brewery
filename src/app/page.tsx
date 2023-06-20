@@ -35,16 +35,7 @@ interface DrinkProps {
 
 function Drink(props: DrinkProps) {
     const { name, isAlcoholic, category } = props;
-    const [saveDrinkLoading, setSaveDrinkLoading] = useState<boolean>(false);
 
-    const saveDrink = () => {
-        setSaveDrinkLoading(true);
-        const userSaved = collection(firestore, user.email);
-        addDoc(userSaved, props).finally(() => {
-            setSaveDrinkLoading(false);
-        });
-    };
-    const { user } = useAuth();
     return (
         <Flex
             flexDirection="column"
@@ -55,15 +46,6 @@ function Drink(props: DrinkProps) {
             <Text>Drink Name: {name}</Text>
             <Text>Drink Type: {isAlcoholic}</Text>
             <Text>Drink Category: {category}</Text>
-            <Button
-                isLoading={saveDrinkLoading}
-                isDisabled={!user}
-                onClick={saveDrink}
-                alignSelf="center"
-                maxWidth="80%"
-            >
-                Save Drink
-            </Button>
         </Flex>
     );
 }
@@ -72,6 +54,8 @@ export default function Home() {
     const [drink, setDrink] = useState<DrinkProps>();
     const [userDrinks, setUserDrinks] = useState<DrinkProps[]>([]);
     const [getDrinkLoading, setGetDrinkLoading] = useState<boolean>(false);
+    const [saveDrinkLoading, setSaveDrinkLoading] = useState<boolean>(false);
+    const [newDrink, setnewDrink] = useState<boolean>(true);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -85,7 +69,7 @@ export default function Home() {
                 });
             }
         })();
-    }, [user]);
+    }, [user, newDrink]);
 
     const getDrink = () => {
         setGetDrinkLoading(true);
@@ -105,6 +89,14 @@ export default function Home() {
             });
     };
 
+    const saveDrink = () => {
+        setSaveDrinkLoading(true);
+        const userSaved = collection(firestore, user.email);
+        addDoc(userSaved, drink).finally(() => {
+            setSaveDrinkLoading(false);
+            setnewDrink(!newDrink);
+        });
+    };
     return (
         <Flex
             padding="1rem"
@@ -118,6 +110,17 @@ export default function Home() {
                     Get Random Drink
                 </Button>
                 {drink && <Drink {...drink} />}
+                {drink && (
+                    <Button
+                        isLoading={saveDrinkLoading}
+                        isDisabled={!user}
+                        onClick={saveDrink}
+                        alignSelf="center"
+                        maxWidth="80%"
+                    >
+                        Save Drink
+                    </Button>
+                )}
             </Flex>
             {!user && (
                 <Text fontWeight="medium">
